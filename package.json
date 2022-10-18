@@ -1,0 +1,12 @@
+{
+  "name": "console-board",
+  "version": "1.0.0",
+  "description": "An small console board web app",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

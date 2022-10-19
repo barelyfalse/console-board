@@ -1,6 +1,7 @@
 require('dotenv').config()
 const Pusher = require("pusher");
 const express = require('express')
+const favicon = require('serve-favicon')
 var app = express()
 
 const pusher = new Pusher({
@@ -12,6 +13,7 @@ const pusher = new Pusher({
 });
 
 app.use(express.static(__dirname+'/public'))
+app.use(favicon(__dirname + '/public/img/favicon.ico'))
 app.use(express.json())
 
 app.get('/', function(req, res) {

@@ -3,18 +3,11 @@ const Pusher = require("pusher");
 const express = require('express')
 var app = express()
 
-const {
-  PUSHER_APP_ID: pusherAppId,
-  PUSHER_KEY: pusherKey,
-  PUSHER_SECRET: pusherSecret,
-  PUSHER_CLUSTER: pusherCluster,
-} = process.env;
-
 const pusher = new Pusher({
-  appId: pusherAppId,
-  key: pusherKey,
-  secret: pusherSecret,
-  cluster: pusherCluster,
+  appId: process.env.PUSHER_APP_ID,
+  key: '9f0b98fbf42211664194',
+  secret: process.env.PUSHER_SECRET,
+  cluster: 'us2',
   useTLS: true
 });
 

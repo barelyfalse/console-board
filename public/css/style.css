@@ -7,6 +7,70 @@
 body {
   font-family: 'JetBrains Mono', monospace;
   font-size: 1rem;
+  background-color: rgb(32, 32, 32);
+  color: rgb(196, 196, 196);
+  max-height: 100vh;
+}
+
+.container {
   height: 100vh;
-  width: 100vw;
+  max-height: 100vh;
+  padding: .5rem;
+  display: flex;
+}
+
+.console {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.lines-container {
+  flex-grow: 1;
+  overflow: auto;
+  scroll-snap-type: y mandatory;
+}
+
+.lines {
+  flex-direction: column;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.line {
+  scroll-snap-align: end;
+  scroll-snap-stop: always;
+}
+
+.info {
+  color: rgb(32, 32, 32);
+  background-color: rgb(189, 189, 189);
+}
+
+.foot {
+  color: rgb(92, 92, 92);
+  background-color: rgb(48, 48, 48);
+}
+
+.input-area {
+  display: flex;
+  flex-direction: row;
+}
+
+.input-carret {
+  display: block;
+}
+
+.input {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1rem;
+  margin: 0;
+  padding: 0;
+  border: none;
+  outline: none;
+  background-color: transparent;
+  color: rgb(196, 196, 196);
+  width: 100%;
+  resize: none;
+  height: calc(1rem + 2px);
 }

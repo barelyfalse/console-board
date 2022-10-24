@@ -13,6 +13,7 @@
   "dependencies": {
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
+    "firebase": "^9.12.1",
     "pusher": "^5.1.1-beta",
     "serve-favicon": "^2.5.0"
   },

@@ -34,6 +34,7 @@ body {
 .lines {
   flex-direction: column;
   display: flex;
+  height: 100%;
   justify-content: flex-end;
 }
 
@@ -45,11 +46,13 @@ body {
 .info {
   color: rgb(32, 32, 32);
   background-color: rgb(189, 189, 189);
+  border-radius: 3px;
 }
 
 .foot {
   color: rgb(92, 92, 92);
   background-color: rgb(48, 48, 48);
+  border-radius: 3px;
 }
 
 .input-area {
@@ -73,4 +76,17 @@ body {
   width: 100%;
   resize: none;
   height: calc(1rem + 2px);
+}
+
+.line {
+  display: flex;
+  flex-direction: row;
+  border-radius: 3px;
+}
+.line:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.hidden {
+  display: none;
 }

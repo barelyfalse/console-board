@@ -342,3 +342,5 @@ app.post("/api/set-state-channel", (req, res) => {
 })
 
 app.listen(process.env.SERVER_PORT || 3000, () => {console.log('Listening on port ' + process.env.SERVER_PORT)})
+
+module.exports = app

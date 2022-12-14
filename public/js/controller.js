@@ -1,50 +1,29 @@
 const input = document.getElementById('input');
 const lines = document.getElementById('lines');
 const linesContainer = document.getElementById('lines-container');
-const opts = document.getElementById('opts');
-const foot = document.getElementById('foot');
+const optsEl = document.getElementById('opts');
+const footEl = document.getElementById('foot');
 let profile = {}
+let options = []
 let loginState = false;
+let logged = false;
 let loadI = 0;
 let loading = false;
-
+let onBoard = false;
 const loadChars = ['/', '-', '\\', '|']
 
 //Pusher.logToConsole = true;
 
-var pusher = new Pusher('9f0b98fbf42211664194', { cluster: 'us2' });
-var channel = pusher.subscribe('chnnl');
-
-channel.bind('event', function(data) {
-  alert(JSON.stringify(data));
+var pusher = new Pusher('9f0b98fbf42211664194', { 
+  cluster: 'us2',
+  userAuthentication: { endpoint: "/api/user-auth" }
 });
 
-function pushData(data) {
-  console.log(JSON.stringify(data))
-  fetch("api/event-channel", {
-    method: "POST",
-    headers: {'Content-Type': 'application/json'}, 
-    body: JSON.stringify(data)
-  }).then(res => {
-    console.log("Request complete! response:", res)
-  });
-}
+var channel = pusher.subscribe('chnnl');
 
-function send() {
-  pushData({data: 2, user: 'nomas'})
-}
-
-function sendSimple(msg) {
-  let el = document.createElement('div')
-  el.innerText = msg
-  el.className = 'line'
-  lines.appendChild(el)
-  settleLines()
-}
-
-function addLine(carret, content) {
+function addLine(carret, content, style = '') {
   let ln = document.createElement('div')
-  ln.className = 'line'
+  ln.className = 'line ' + style
   let car = document.createElement('div')
   car.className = 'line-carret'
   car.innerText = carret
@@ -57,77 +36,174 @@ function addLine(carret, content) {
   settleLines()
 }
 
-function addSysLine(msg) {
-  addLine('sys>\xa0', msg)
+pusher.bind('recieve', function (data) {
+  if (data.hasOwnProperty('state')) {
+    profile.state = data.state
+    localStorage.setItem('profile', JSON.stringify(profile));
+  }
+
+  if (data.hasOwnProperty('clean') && data.clean) {
+    cleanLines()
+  }
+
+  if (data.hasOwnProperty('foot')) {
+    setFoot(data.foot)
+  }
+
+  if (data.hasOwnProperty('opts')) {
+    setOptions(data.opts)
+  }
+
+  if (data.hasOwnProperty('lines')) {
+    data.lines.forEach((msg) => {
+      addLine(msg.carret, msg.content, msg.class)
+    })
+  }
+  setLoading(false);
+  setMainCarret('\xa0\xa0\xa0>')
+  input.focus()
+})
+
+pusher.bind('pusher:signin_success', function(data) {
+  if(JSON.parse(data.user_data).id !== null) {
+    profile = JSON.parse(localStorage.getItem('profile')) || {}
+    profile.uid = JSON.parse(data.user_data).id
+    addSysLine('Conectado al servicio de persistencia.')
+    addSysLine('id: ' + profile.uid, true)
+    fetch("api/set-state-channel", {
+      method: "POST",
+      headers: {'Content-Type': 'application/json'}, 
+      body: JSON.stringify(profile)
+    }).then(res => {
+      if(res.status !== 200) {
+        addSysLine('Ocurrió un error :c')
+      }
+    });
+  } else {
+    addSysLine('Conexión al servicio de persistencia sin éxito! :c')
+  }
+})
+
+pusher.bind('signin', function(data) {
+  profile.uname = data.uname
+  localStorage.setItem('profile', JSON.stringify(profile));
+})
+
+pusher.bind('logout', function() {
+  localStorage.removeItem('profile')
+  window.location.reload()
+})
+
+function pushData(data) {
+  setLoading(true)
+  fetch("api/event-channel", {
+    method: "POST",
+    headers: {'Content-Type': 'application/json'}, 
+    body: JSON.stringify(data)
+  }).then(res => {
+    if(res.status !== 200) {
+      addSysLine('Ocurrió un error :c')
+    }
+  });
+}
+
+function pushCommand(data) {
+  setLoading(true)
+  fetch("api/command-channel", {
+    method: "POST",
+    headers: {'Content-Type': 'application/json'}, 
+    body: JSON.stringify(data)
+  }).then(res => {
+    if(res.status !== 200) {
+      addSysLine('Ocurrió un error :c')
+    }
+  });
+}
+
+function addSysLine(msg, dim = false) {
+  addLine('sys>\xa0', msg, dim?'dim-text':'')
 }
 
 function addLocalLine(msg) {
-  addLine('>\xa0', msg)
+  addLine('\xa0\xa0\xa0>\xa0', msg)
 }
 
 function setMainCarret(carret) {
   document.getElementById('input-carret').innerText = `${carret}\xa0`
 }
 
-function setOptions(optText) {
-  opts.innerText = optText
+function setOptions(opts) {
+  options = opts || []
+  let optText = '\xa0'
+  opts.forEach((opt, i)=>{
+    optText += `${(i == 0?'':'\xa0\xa0')}<span class="opt-letter">${opt.cmd.toUpperCase()}</span>:${opt.name}`
+  })
+  optsEl.innerHTML = optText
 }
 
 function setFoot(ftext) {
-  foot.innerText = ftext
+  footEl.innerText = ftext
 }
 
-function printBanenr() {
-  
-}
+function inputToCommands(input) {
 
-function logIn() {
-  if(loginState) {
-    if(input.value !== '' && input.value.length > 2 && input.value.length < 20) {
-      //login
-      loginState = false
-      localStorage.setItem('profile', JSON.stringify({'uname': input.value.trim()}))
-      input.value = ''
-      setLogged()
-    } else {
-      addSysLine('Invalid username!')
-    }
-  }
 }
 
 input.addEventListener('keypress', (e) => {
   const keyPressed = e.key
+  
+  if (keyPressed === 'Enter') {
+    e.preventDefault()
+    if (e.target.value.match(/^(\/[a-zA-Z])([\s\w])*/g)) {
+      switch (e.target.value[1].toLowerCase()) {
+        case 's':
+          for (let i = 0; i < 10; i++) {
+            addLocalLine('hi')
+          }
+          break;
+        default:
+          addLocalLine(e.target.value)
+          pushCommand({cmd: e.target.value, uid: profile.uid, uname: profile.uname, state: profile.state})
+          break;
+      }
+      
+    } else if(e.target.value !== '') {
+      addLocalLine(e.target.value)
+    } else {
+      addLine('','\xa0')
+    }
+    
+    e.target.value = ''
+    e.target.style.height = '1rem';
+  }
+  /*
   if (keyPressed === 'Enter') {
     e.preventDefault();
     if (e.target.value[0] == '/' && e.target.value.length == 2) {
       switch (e.target.value[1].toLowerCase()) {
-        case 'l':
-          addSysLine('Loading state')
-          setLoading(true)
-          break;
-        case 's':
-          addSysLine('Loading state off')
-          setLoading(false)
-          setMainCarret('MSG>')
-          break;
         case 'c':
           clearLines()
           break;
-        case 'a':
+        case 's':
           for (let i = 0; i < 10; i++) {
             addLocalLine('hi')
           }
           break;
         case 'q':
-          clearLines()
-          localStorage.clear('profile')
-          addSysLine('Deleting profile')
-          addSysLine('Loggin off')
-          addLine('', '\xa0')
-          setLogin()
+          if(logged) {
+            clearLines()
+            localStorage.removeItem('profile')
+            addSysLine('Deleting profile')
+            addSysLine('Loggin off')
+            addLine('', '\xa0')
+            onBoard = false
+            logged = false
+            entryState()
+          }
           break;
         case 'b':
-          addSysLine('Work on progress!')
+          if(logged)
+            setBoard()
           break;
         case 'i':
           addSysLine('Información valiosísima!')
@@ -136,15 +212,20 @@ input.addEventListener('keypress', (e) => {
           addSysLine('Unknown command!')
           break;
       }
-      e.target.value = ''
+      
     } else if(loginState) {
       logIn()
+    } else if(logged && onBoard && e.target.value !== '') {
+      pushData({cmd: 'msg', msg: e.target.value, uProf: profile})
     } else if(e.target.value !== '') {
       addLocalLine(e.target.value)
-      e.target.value = ''
+    } else {
+      addLine('','\xa0')
     }
+    e.target.value = ''
     e.target.style.height = '1rem';
   }
+  */
 })
 
 input.addEventListener('input', (e) => {
@@ -152,9 +233,9 @@ input.addEventListener('input', (e) => {
   e.target.style.height = ((e.target.scrollHeight) / 16) + 'rem';
   if(!loading && !loginState){
     if(e.target.value[0] == '/') {
-      setMainCarret('OPT>')
+      setMainCarret('opt>')
     } else {
-      setMainCarret('MSG>')
+      setMainCarret('\xa0\xa0\xa0>')
     }
   }
 })
@@ -165,7 +246,7 @@ function settleLines() {
   }, 200)
 }
 
-function clearLines() {
+function cleanLines() {
   var child = lines.lastElementChild; 
   while (child) {
     lines.removeChild(child);
@@ -173,52 +254,29 @@ function clearLines() {
   }
 }
 
-
-function setLogin() {
-  loginState = true
-  addSysLine('Log with a cool name!')
-  addLine('', '\xa0')
-  setMainCarret('username:')
-  setFoot('\xa0')
-}
-
-function setLogged() {
-  profile = JSON.parse(localStorage.getItem('profile'))
-  clearLines()
-  opts.classList.remove('hidden')
-  setOptions('Q:Quit\xa0\xa0B:Load Board\xa0\xa0I:Info')
-  setMainCarret('MSG>')
-  addLocalLine(`Logged as ${profile.uname}` )
-  addLine('', '\xa0')
-  addSysLine(`Welcome ${profile.uname}!`)
-  addSysLine('Write te command of your choose. /h for help.')
-  addLine('', '\xa0')
-  setFoot('\xa0/[CMD] for commands') 
-}
-
-function entryState() {
-  if(localStorage.getItem('profile') !== null) {
-    setLogged()
-  } else {   
-    clearLines()
-    setLogin()
-  }
-}
-
 function setLoading(ldng) {
   if(ldng) {
     loading = true
+    input.disabled = true
     rec = setTimeout(() => {
-      setMainCarret(`\xa0${loadChars[loadI%loadChars.length]}\xa0`)
+      setMainCarret(`\xa0${loadChars[loadI%loadChars.length]}\xa0✕`)
       loadI++
       setLoading(true)
     }, 200)
   } else {
-    loading = false
-    if(rec !== undefined) {
+    if(loading) {
+      loading = false
+      loadI = 0
+      input.disabled = false
       clearTimeout(rec)
     }
   }
 }
 
-entryState()
+function entry() {
+  pusher.signin()
+  setLoading(true)
+  input.focus()
+}
+
+entry()

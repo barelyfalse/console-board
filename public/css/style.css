@@ -30,7 +30,22 @@ body {
 .lines-container {
   flex-grow: 1;
   overflow-y: auto;
+  scrollbar-color: rgb(43, 43, 43) transparent;
+  scrollbar-width: thin;
+  scroll-snap-type: y mandatory;
 }
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent; 
+}
+::-webkit-scrollbar-thumb {
+  background: rgb(43, 43, 43);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgb(80, 80, 80); 
+} 
 
 .lines {
   display: flex;
@@ -44,7 +59,7 @@ body {
   flex-direction: row;
   border-radius: 3px;
   scroll-snap-align: end;
-  scroll-snap-stop: always;
+  scroll-snap-stop: normal;
   width: 100%;
 }
 .line:hover {
@@ -55,16 +70,30 @@ body {
   overflow-wrap: break-word;
 }
 
+.dim-text {
+  color: rgb(100, 100, 100);
+}
+
+.dim-error {
+  color: rgb(167, 39, 39);
+}
+
 .info {
   color: rgb(32, 32, 32);
   background-color: rgb(151, 151, 151);
-  border-radius: 3px;
+  border-radius: 2px;
+}
+
+.opt-letter {
+  background-color: rgb(32, 32, 32);
+  color: rgb(151, 151, 151);
+  font-weight: bold;
 }
 
 .foot {
   color: rgb(92, 92, 92);
   background-color: rgb(48, 48, 48);
-  border-radius: 3px;
+  border-radius: 2px;
 }
 
 .input-area {

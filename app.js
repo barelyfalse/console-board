@@ -150,7 +150,7 @@ app.post("/api/command-channel", (req, res) => {
         case 'lobby':
           switch (matchCommand(['login', 'help'], command.cmd)) {
             case 'login':
-              if (command.params.match(/^([a-z0-9áéíóúü\s\-_#!&]{3,15})/gi)) {
+              if (command.params.match(/^([a-z0-9áéíóúü\s\-_#!&$]{3,15})/gi)) {
                 pusher.sendToUser(data.uid, "signin", { uname: command.params })
                 pusher.sendToUser(data.uid, "recieve", {
                   state: encryptState('loggedMenu').concatenned,
@@ -177,7 +177,7 @@ app.post("/api/command-channel", (req, res) => {
                     {carret: 'sys>\xa0', content: 'Error: nombre de usuario inválido!', class: ''},
                     {carret: 'sys>\xa0', content: 'Accede con: /l [nombre_de_usuario]', class: ''},
                     {carret: 'sys>\xa0', content: ' - Debe contener entre 3 y 15 caractéres', class: ''},
-                    {carret: 'sys>\xa0', content: ' - Además de carácteres alfanuméricos puede contener: - _ # ! &', class: ''},
+                    {carret: 'sys>\xa0', content: ' - Además de carácteres alfanuméricos puede contener: - _ # ! & $', class: ''},
                   ]
                 });
                 res.status(200).end()

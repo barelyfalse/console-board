@@ -37,6 +37,8 @@ function addLine(carret, content, style = '') {
 }
 
 pusher.bind('recieve', function (data) {
+  console.log('Respuesta alcanzó usuario')
+  console.log(data)
   if (data.hasOwnProperty('state')) {
     profile.state = data.state
     localStorage.setItem('profile', JSON.stringify(profile));
@@ -70,7 +72,7 @@ pusher.bind('pusher:signin_success', function(data) {
     profile.uid = JSON.parse(data.user_data).id
     addSysLine('Conectado al servicio de persistencia.')
     addSysLine('id: ' + profile.uid, true)
-    fetch("api/set-state-channel", {
+    fetch("/api/set-state-channel", {
       method: "POST",
       headers: {'Content-Type': 'application/json'}, 
       body: JSON.stringify(profile)
@@ -96,7 +98,7 @@ pusher.bind('logout', function() {
 
 function pushData(data) {
   setLoading(true)
-  fetch("api/event-channel", {
+  fetch("/api/event-channel", {
     method: "POST",
     headers: {'Content-Type': 'application/json'}, 
     body: JSON.stringify(data)
@@ -109,7 +111,7 @@ function pushData(data) {
 
 function pushCommand(data) {
   setLoading(true)
-  fetch("api/command-channel", {
+  fetch("/api/command-channel", {
     method: "POST",
     headers: {'Content-Type': 'application/json'}, 
     body: JSON.stringify(data)

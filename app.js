@@ -274,6 +274,7 @@ app.post("/api/user-auth", (req, res) => {
 });
 
 app.post("/api/set-state-channel", (req, res) => {
+  console.log(req.body)
   if (req.body && req.body.hasOwnProperty('uid')) {
     if (req.body && req.body.hasOwnProperty('state')) {
       state = decryptState(req.body.state)
@@ -320,6 +321,8 @@ app.post("/api/set-state-channel", (req, res) => {
           break;
       }
     } else {
+      console.log('doesnt have state')
+      console.log(req.body.uid)
       pusher.sendToUser(req.body.uid, "recieve", { 
         state: encryptState('lobby').concatenned,
         lines: [
@@ -334,7 +337,7 @@ app.post("/api/set-state-channel", (req, res) => {
         clean: false
       });
       
-      res.status(200).end();
+      res.status(200).end('State setted');
     }
   } else {
     res.status(403).end('Bad request ocurred');

@@ -12,7 +12,7 @@ let loading = false;
 let onBoard = false;
 const loadChars = ['/', '-', '\\', '|']
 
-//Pusher.logToConsole = true;
+Pusher.logToConsole = true;
 
 var pusher = new Pusher('9f0b98fbf42211664194', { 
   cluster: 'us2',

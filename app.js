@@ -292,7 +292,7 @@ app.post("/api/set-state-channel", (req, res) => {
             foot: '\xa0/[CMD] para comandos, ej. > /h',
             clean: false
           });
-          res.status(200).end();
+          res.status(200).end('Loggin');
           break;
         case 'loggedMenu':
           pusher.sendToUser(req.body.uid, "recieve", {
@@ -311,10 +311,10 @@ app.post("/api/set-state-channel", (req, res) => {
             foot: '\xa0/[CMD] para comandos, ej. > /h',
             clean: false
           });
-          res.status(200).end();
+          res.status(200).end('Logged');
           break;
         case 'board':
-          res.status(200).end();
+          res.status(200).end('Board');
           break;
         default:
           res.status(403).end('Bad state');

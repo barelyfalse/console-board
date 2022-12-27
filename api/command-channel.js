@@ -41,7 +41,7 @@ module.exports = (req, res) => {
         lines: [
           {carret: 'sys>\xa0', content: 'Bad state!'}
         ],
-        foot: 'Intenta recargar la página',
+        foot: '\xa0Intenta recargar la página',
       })
     }
 
@@ -60,7 +60,7 @@ module.exports = (req, res) => {
               {cmd: 'l', name: 'Login'},
               {cmd: 'h', name: 'Ayuda'},
             ],
-            foot: '/[CMD] para comandos, ej. > /h',
+            foot: '\xa0/[CMD] para comandos, ej. > /h',
             clean: false
           })
         } else if (data.hasOwnProperty('cmd')) {
@@ -89,7 +89,7 @@ module.exports = (req, res) => {
                 res.cookie('uname', command.params, {sameSite: 'none', secure: true, maxAge: 9000000000, httpOnly: true })
                 //prepare response
                 //  change state
-                res.cookie('state', crypto.encryptState('logged'), {sameSite: 'none', secure: true, maxAge: 9000000000, httpOnly: true })
+                res.cookie('state', crypto.encryptState('logged').concatenned, {sameSite: 'none', secure: true, maxAge: 9000000000, httpOnly: true })
                 //  logged state lines
                 sendReponse(res, {
                   lines: [
@@ -104,7 +104,6 @@ module.exports = (req, res) => {
                     {cmd: 'h', name: 'Ayuda'},
                     {cmd: 'i', name: 'Info'}
                   ],
-                  foot: '/[CMD] para comandos, ej. > /h',
                   clean: true
                 })
                 break;
@@ -130,7 +129,7 @@ module.exports = (req, res) => {
         }
         break;
       case 'logged':
-        if (!data.hasOwnProperty('cmd') && !cookies.hasOwnProperty('uname')) {
+        if (!data.hasOwnProperty('cmd') && cookies.hasOwnProperty('uname')) {
           sendReponse(res, {
             lines: [
               {carret: '', content: '\xa0', class: ''},
@@ -144,17 +143,70 @@ module.exports = (req, res) => {
               {cmd: 'h', name: 'Ayuda'},
               {cmd: 'i', name: 'Info'}
             ],
-            foot: '/[CMD] para comandos, ej. > /h',
+            foot: '\xa0/[CMD] para comandos, ej. > /h',
             clean: true
           })
         } else {
           command = cleanCommand(data.cmd)
           switch (matchCommand(['board', 'quit', 'help', 'info'], command.cmd)) {
-            case 'quit':
-              
+            case 'board':
+              sendReponse(res, {
+                lines: [
+                  {carret: 'sys>\xa0', content: 'Coming soon!', class: ''},
+                ]
+              })
               break;
-          
+            case 'quit':
+              res.clearCookie('uname')
+              res.cookie('state', crypto.encryptState('lobby').concatenned, {sameSite: 'none', secure: true, maxAge: 9000000000, httpOnly: true })
+              sendReponse(res, {
+                clear: true,
+                lines: [
+                  {carret: 'sys>\xa0', content: 'Eliminando perfil...', class: ''},
+                  {carret: 'sys>\xa0', content: 'Perfil eliminado!', class: ''},
+                  {carret: '', content: '\xa0', class: ''},
+                  {carret: 'sys>\xa0', content: 'Accede con un buen nombre de usuario!', class: ''},
+                  {carret: '', content: '\xa0', class: ''},
+                ],
+                opts: [
+                  {cmd: 'l', name: 'Login'},
+                  {cmd: 'h', name: 'Ayuda'},
+                ],
+                foot: '\xa0/[CMD] para comandos, ej. > /h',
+                clean: false
+              })
+              break;
+            case 'help':
+              sendReponse(res, {
+                lines: [
+                  {carret: 'sys>\xa0', content: 'Comandos disponibles:', class: ''},
+                  {carret: '\xa0', content: `b - Board - Carga el tablero. (board)`, class: ''},
+                  {carret: '\xa0', content: `${'\xa0'.repeat(12)}Sintáxis: /b`, class: 'dim-text'},
+                  {carret: '\xa0', content: `q - Salir - Cierra sesión y elimina el perfil local. (quit)`, class: ''},
+                  {carret: '\xa0', content: `${'\xa0'.repeat(12)}Sintáxis: /q`, class: 'dim-text'},
+                  {carret: '\xa0', content: `h - Ayuda - Imprime estas opciones. (help)`, class: ''},
+                  {carret: '\xa0', content: `${'\xa0'.repeat(12)}Sintáxis: /h`, class: 'dim-text'},
+                  {carret: '\xa0', content: `i - Ayuda - Imprime valiosa información. (info)`, class: ''},
+                  {carret: '\xa0', content: `${'\xa0'.repeat(12)}Sintáxis: /i`, class: 'dim-text'},
+                  {carret: '\xa0', content: '\xa0', class: ''},
+                ]
+              })
+              break;
+            case 'info':
+              sendReponse(res, {
+                lines: [
+                  {carret: 'sys>\xa0', content: 'Board version: 0.5a', class:''},
+                  {carret: 'sys>\xa0', content: 'Project: https://github.com/barelyfalse/console-board', class:''},
+                  {carret: 'sys>\xa0', content: `Email me: ${process.env.EMAIL_ADDRESS}`, class:''}
+                ]
+              })
+              break;
             default:
+              sendReponse(res, {
+                lines: [
+                  {carret: 'sys>\xa0', content: 'Error: El comando no existe! :('},
+                ]
+              })
               break;
           }
           break;
@@ -167,92 +219,4 @@ module.exports = (req, res) => {
   } else {
     //send error, bad credentials
   }
-
-  /*
-  if (data.hasOwnProperty('cmd') && data.hasOwnProperty('uid') && data.hasOwnProperty('state')) {
-    if (data.cmd.match(/^(\/[a-zA-Z])([\s\w])* /g)) {
-
-      command = cleanCommand(data.cmd)
-      
-      state = decryptState(data.state)
-
-      switch (state) {
-        case 'lobby':
-          switch (matchCommand(['login', 'help'], command.cmd)) {
-            case 'login':
-              
-              break;
-            case 'help':
-              
-              break;
-            default:
-              sendReponse(res, {
-                lines: [
-                  {carret: 'sys>\xa0', content: 'Error: comando desconocido :(', class: 'dim-error'},
-                ]
-              })
-              break;
-          }
-          break;
-        case 'loggedMenu':
-          switch (matchCommand(['board', 'quit', 'help', 'info'], command.cmd)) {
-            case 'board':
-              
-              break;
-            case 'quit':
-              
-              break;
-            case 'help':
-              
-              break;
-            case 'info':
-              
-              break;
-            default:
-              
-              break;
-          }
-          break;
-        case 'board':
-          break;
-        default:
-          res.status(403).end('Bad state')
-          break;
-      }
-      res.status(200).end();
-    } else {
-      res.status(403).end('Bad command');
-    }
-  } else {
-    if (data.hasOwnProperty('uid') && !data.hasOwnProperty('state')) {
-      res.setHeader('Content-Type', 'application/json');
-      res.setHeader('Cache-Control', 's-max-age=1, stale-while-revalidate');
-      res.status(200).json({ 
-        state: crypto.encryptState('lobby').concatenned,
-        lines: [
-          {carret: '', content: '\xa0', class: ''},
-          {carret: 'sys>\xa0', content: 'Accede con un buen nombre de usuario!', class: ''},
-          {carret: '', content: '\xa0', class: ''},
-        ],
-        opts: [
-          {cmd: 'l', name: 'Login'},
-          {cmd: 'h', name: 'Ayuda'},
-        ],
-        foot: '/[CMD] para comandos, ej. > /h',
-        clean: false
-      })
-    } else {
-      res.setHeader('Content-Type', 'application/json');
-      res.setHeader('Cache-Control', 's-max-age=1, stale-while-revalidate');
-      res.status(200).json({
-        lines: [
-          {carret: 'sys>\xa0', content: `Bad endpoint!`, class: ''},
-          {carret: '', content: '\xa0', class: ''},
-        ],
-        opts: [],
-        foot: '\xa0Error',
-      });
-    }
-  }
-  */
 }

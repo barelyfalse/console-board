@@ -12,15 +12,6 @@ let loading = false;
 let onBoard = false;
 const loadChars = ['/', '-', '\\', '|']
 
-//Pusher.logToConsole = true;
-
-var pusher = new Pusher('9f0b98fbf42211664194', { 
-  cluster: 'us2',
-  userAuthentication: { endpoint: "/api/user-auth" }
-});
-
-var channel = pusher.subscribe('chnnl');
-
 function addLine(carret, content, style = '') {
   let ln = document.createElement('div')
   ln.className = 'line ' + style
@@ -36,120 +27,12 @@ function addLine(carret, content, style = '') {
   settleLines()
 }
 
-pusher.bind('recieve', function (data) {
-  if (data.hasOwnProperty('state')) {
-    profile.state = data.state
-    localStorage.setItem('profile', JSON.stringify(profile));
+function clearLines() {
+  var child = lines.lastElementChild; 
+  while (child) {
+    lines.removeChild(child);
+      child = lines.lastElementChild;
   }
-
-  if (data.hasOwnProperty('clean') && data.clean) {
-    cleanLines()
-  }
-
-  if (data.hasOwnProperty('foot')) {
-    setFoot(data.foot)
-  }
-
-  if (data.hasOwnProperty('opts')) {
-    setOptions(data.opts)
-  }
-
-  if (data.hasOwnProperty('lines')) {
-    data.lines.forEach((msg) => {
-      addLine(msg.carret, msg.content, msg.class)
-    })
-  }
-  setLoading(false);
-  setMainCarret('\xa0\xa0\xa0>')
-  input.focus()
-})
-
-pusher.bind('pusher:signin_success', function(data) {
-  if(JSON.parse(data.user_data).id !== null) {
-    profile = JSON.parse(localStorage.getItem('profile')) || {}
-    profile.uid = JSON.parse(data.user_data).id
-    addSysLine('Conectado al servicio de persistencia.')
-    addSysLine('id: ' + profile.uid, true)
-    fetch("api/set-state-channel", {
-      method: "POST",
-      headers: {'Content-Type': 'application/json'}, 
-      body: JSON.stringify(profile)
-    }).then(res => {
-      res.json().then((json) => console.log(json))
-      if(res.status !== 200) {
-        addSysLine('Ocurrió un error :c')
-      }
-    });
-    
-  } else {
-    addSysLine('Conexión al servicio de persistencia sin éxito! :c')
-  }
-})
-
-
-pusher.bind('signin', function(data) {
-  profile.uname = data.uname
-  localStorage.setItem('profile', JSON.stringify(profile));
-})
-
-pusher.bind('logout', function() {
-  localStorage.removeItem('profile')
-  window.location.reload()
-})
-
-function pushData(data) {
-  setLoading(true)
-  fetch("api/event-channel", {
-    method: "POST",
-    headers: {'Content-Type': 'application/json'}, 
-    body: JSON.stringify(data)
-  }).then(res => {
-    if(res.status !== 200) {
-      addSysLine('Ocurrió un error :c')
-    }
-  });
-}
-
-function pushCommand(data) {
-  setLoading(true)
-  fetch("api/command-channel", {
-    method: "POST",
-    headers: {'Content-Type': 'application/json'}, 
-    body: JSON.stringify(data)
-  }).then(res => {
-    setLoading(false)
-    if(res.status !== 200) {
-      addSysLine('Ocurrió un error :c')
-    } else {
-      res.json().then(data => {
-        if (data.hasOwnProperty('state')) {
-          profile.state = data.state
-          localStorage.setItem('profile', JSON.stringify(profile));
-        }
-      
-        if (data.hasOwnProperty('clean') && data.clean) {
-          cleanLines()
-        }
-      
-        if (data.hasOwnProperty('foot')) {
-          setFoot(data.foot)
-        }
-      
-        if (data.hasOwnProperty('opts')) {
-          setOptions(data.opts)
-        }
-      
-        if (data.hasOwnProperty('lines')) {
-          data.lines.forEach((msg) => {
-            addLine(msg.carret, msg.content, msg.class)
-          })
-        }
-        setLoading(false);
-        setMainCarret('\xa0\xa0\xa0>')
-        input.focus()
-      })
-    }
-  });
 }
 
 function addSysLine(msg, dim = false) {
@@ -177,8 +60,46 @@ function setFoot(ftext) {
   footEl.innerText = ftext
 }
 
-function inputToCommands(input) {
-
+function pushCommand(data) {
+  setLoading(true)
+  fetch("api/command-channel", {
+    method: "POST",
+    headers: {'Content-Type': 'application/json'}, 
+    body: JSON.stringify(data)
+  }).then(res => {
+    setLoading(false)
+    if(res.status !== 200) {
+      addSysLine('Ocurrió un error :c')
+    } else {
+      res.json().then(data => {
+        if (data.hasOwnProperty('state')) {
+          profile.state = data.state
+          localStorage.setItem('profile', JSON.stringify(profile));
+        }
+      
+        if (data.hasOwnProperty('clear') && data.clear) {
+          clearLines()
+        }
+      
+        if (data.hasOwnProperty('foot')) {
+          setFoot(data.foot)
+        }
+      
+        if (data.hasOwnProperty('opts')) {
+          setOptions(data.opts)
+        }
+      
+        if (data.hasOwnProperty('lines')) {
+          data.lines.forEach((msg) => {
+            addLine(msg.carret, msg.content, msg.class)
+          })
+        }
+        setLoading(false);
+        setMainCarret('\xa0\xa0\xa0>')
+        input.focus()
+      })
+    }
+  });
 }
 
 input.addEventListener('keypress', (e) => {
@@ -208,56 +129,6 @@ input.addEventListener('keypress', (e) => {
     e.target.value = ''
     e.target.style.height = '1rem';
   }
-  /*
-  if (keyPressed === 'Enter') {
-    e.preventDefault();
-    if (e.target.value[0] == '/' && e.target.value.length == 2) {
-      switch (e.target.value[1].toLowerCase()) {
-        case 'c':
-          clearLines()
-          break;
-        case 's':
-          for (let i = 0; i < 10; i++) {
-            addLocalLine('hi')
-          }
-          break;
-        case 'q':
-          if(logged) {
-            clearLines()
-            localStorage.removeItem('profile')
-            addSysLine('Deleting profile')
-            addSysLine('Loggin off')
-            addLine('', '\xa0')
-            onBoard = false
-            logged = false
-            entryState()
-          }
-          break;
-        case 'b':
-          if(logged)
-            setBoard()
-          break;
-        case 'i':
-          addSysLine('Información valiosísima!')
-          break;
-        default:
-          addSysLine('Unknown command!')
-          break;
-      }
-      
-    } else if(loginState) {
-      logIn()
-    } else if(logged && onBoard && e.target.value !== '') {
-      pushData({cmd: 'msg', msg: e.target.value, uProf: profile})
-    } else if(e.target.value !== '') {
-      addLocalLine(e.target.value)
-    } else {
-      addLine('','\xa0')
-    }
-    e.target.value = ''
-    e.target.style.height = '1rem';
-  }
-  */
 })
 
 input.addEventListener('input', (e) => {
@@ -276,14 +147,6 @@ function settleLines() {
   setTimeout(() => {
     linesContainer.scrollTop = linesContainer.scrollHeight;
   }, 200)
-}
-
-function cleanLines() {
-  var child = lines.lastElementChild; 
-  while (child) {
-    lines.removeChild(child);
-      child = lines.lastElementChild;
-  }
 }
 
 function setLoading(ldng) {
@@ -306,7 +169,6 @@ function setLoading(ldng) {
 }
 
 function authorize() {
-  //pusher.signin()
   setLoading(true)
   fetch("api/client-auth", {
     method: "POST",
@@ -321,7 +183,6 @@ function authorize() {
       res.json().then(json => {
         if (json.hasOwnProperty('uid')) {
           addSysLine(`uid: ${json.uid}`, true)
-          addLine('\xa0', '')
         }
       })
       pushCommand()

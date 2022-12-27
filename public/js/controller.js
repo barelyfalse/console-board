@@ -75,14 +75,17 @@ pusher.bind('pusher:signin_success', function(data) {
       headers: {'Content-Type': 'application/json'}, 
       body: JSON.stringify(profile)
     }).then(res => {
+      res.json().then((json) => console.log(json))
       if(res.status !== 200) {
         addSysLine('Ocurrió un error :c')
       }
     });
+    
   } else {
     addSysLine('Conexión al servicio de persistencia sin éxito! :c')
   }
 })
+
 
 pusher.bind('signin', function(data) {
   profile.uname = data.uname
@@ -114,8 +117,37 @@ function pushCommand(data) {
     headers: {'Content-Type': 'application/json'}, 
     body: JSON.stringify(data)
   }).then(res => {
+    setLoading(false)
     if(res.status !== 200) {
       addSysLine('Ocurrió un error :c')
+    } else {
+      res.json().then(data => {
+        if (data.hasOwnProperty('state')) {
+          profile.state = data.state
+          localStorage.setItem('profile', JSON.stringify(profile));
+        }
+      
+        if (data.hasOwnProperty('clean') && data.clean) {
+          cleanLines()
+        }
+      
+        if (data.hasOwnProperty('foot')) {
+          setFoot(data.foot)
+        }
+      
+        if (data.hasOwnProperty('opts')) {
+          setOptions(data.opts)
+        }
+      
+        if (data.hasOwnProperty('lines')) {
+          data.lines.forEach((msg) => {
+            addLine(msg.carret, msg.content, msg.class)
+          })
+        }
+        setLoading(false);
+        setMainCarret('\xa0\xa0\xa0>')
+        input.focus()
+      })
     }
   });
 }
@@ -163,7 +195,7 @@ input.addEventListener('keypress', (e) => {
           break;
         default:
           addLocalLine(e.target.value)
-          pushCommand({cmd: e.target.value, uid: profile.uid, uname: profile.uname, state: profile.state})
+          pushCommand({cmd: e.target.value})
           break;
       }
       
@@ -273,10 +305,29 @@ function setLoading(ldng) {
   }
 }
 
-function entry() {
-  pusher.signin()
+function authorize() {
+  //pusher.signin()
   setLoading(true)
+  fetch("api/client-auth", {
+    method: "POST",
+    headers: {'Content-Type': 'application/json'}
+  }).then(res => {
+    setLoading(false)
+    setMainCarret('\xa0\xa0\xa0>\xa0')
+    if (res.status != 200) {
+      addSysLine('Ocurrió un error al autenticar el cliente! :(')
+    } else {
+      addSysLine('Cliente autenticado!')
+      res.json().then(json => {
+        if (json.hasOwnProperty('uid')) {
+          addSysLine(`uid: ${json.uid}`, true)
+          addLine('\xa0', '')
+        }
+      })
+      pushCommand()
+    }
+  });
   input.focus()
 }
 
-entry()
+authorize()

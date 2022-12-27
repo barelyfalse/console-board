@@ -1,11 +1,14 @@
 require('dotenv').config()
 const { initializeApp } = require('firebase/app')
 const { getFirestore, collection, getDocs, addDoc, query, orderBy, limit, serverTimestamp } = require('firebase/firestore')
-const Pusher = require("pusher");
 const express = require('express')
+const cookieParser = require('cookie-parser')
 const favicon = require('serve-favicon')
 const uuid = require('uuid').v4
 const crypto = require('crypto');
+
+const commandChannel = require('./api/command-channel');
+const userAuth = require('./api/client-auth');
 
 const encryptState = (plain) => {
   const salt = crypto.randomBytes(16);
@@ -61,14 +64,6 @@ function matchCommand(cmds, cmd) {
 
 var app = express()
 
-const pusher = new Pusher({
-  appId: process.env.PUSHER_APP_ID,
-  key: '9f0b98fbf42211664194',
-  secret: process.env.PUSHER_SECRET,
-  cluster: 'us2',
-  useTLS: true
-});
-
 const firebaseConfig = {
   apiKey: process.env.FIREBASE_API_KEY,
   authDomain: process.env.FIREBASE_AUTH_DOMAIN,
@@ -85,12 +80,14 @@ const db = getFirestore(fbApp);
 app.use(express.static(__dirname+'/public'))
 app.use(favicon(__dirname + '/public/img/favicon.ico'))
 app.use(express.json())
-app.use(express.urlencoded({ extended: false }));
+app.use(express.urlencoded({ extended: false }))
+app.use(cookieParser())
 
 app.get('/', function(req, res) {
   res.sendFile(__dirname + '/public/index.html')
 })
 
+/*
 app.post('/api/event-channel', (req, res) => {
   data = req.body
   console.log(data)
@@ -137,11 +134,15 @@ app.post('/api/event-channel', (req, res) => {
   }
   
 })
+*/
 
+app.post("/api/command-channel", commandChannel)
+
+/*
 app.post("/api/command-channel", (req, res) => {
   data = req.body
   if (data.hasOwnProperty('cmd') && data.hasOwnProperty('uid') && data.hasOwnProperty('state')) {
-    if (data.cmd.match(/^(\/[a-zA-Z])([\s\w])*/g)) {
+    if (data.cmd.match(/^(\/[a-zA-Z])([\s\w])* /g)) {
       command = cleanCommand(data.cmd)
       command.params = command.params.trim()
       state = decryptState(data.state)
@@ -263,17 +264,26 @@ app.post("/api/command-channel", (req, res) => {
     }
   }
 })
+*/
 
+/*
 app.post("/api/user-auth", (req, res) => {
+
   const socketId = req.body.socket_id
   const user = {
     id: uuid(),
   };
   const authResponse = pusher.authenticateUser(socketId, user);
   res.send(authResponse);
+  //res.send(user)
 });
+*/
 
+app.post('/api/client-auth', userAuth)
+
+/*
 app.post("/api/set-state-channel", (req, res) => {
+
   if (req.body && req.body.hasOwnProperty('uid')) {
     if (req.body && req.body.hasOwnProperty('state')) {
       state = decryptState(req.body.state)
@@ -332,14 +342,14 @@ app.post("/api/set-state-channel", (req, res) => {
         ],
         foot: '/[CMD] para comandos, ej. > /h',
         clean: false
-      });
-      
-      res.status(200).end();
+      })
+      res.status(200).json({keypro: 'valuepro'});
     }
   } else {
     res.status(403).end('Bad request ocurred');
   }
 })
+*/
 
 app.listen(process.env.SERVER_PORT || 3000, () => {console.log('Listening on port ' + process.env.SERVER_PORT)})
 

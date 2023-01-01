@@ -64,7 +64,7 @@ function setFoot(ftext) {
 }
 
 function setLoading(ldng) {
-  if(ldng) {
+  if (ldng) {
     loading = true
     inputEl.disabled = true
     rec = setTimeout(() => {
@@ -73,7 +73,7 @@ function setLoading(ldng) {
       setLoading(true)
     }, 200)
   } else {
-    if(loading) {
+    if (loading) {
       loading = false
       loadIndx = 0
       inputEl.disabled = false
@@ -90,7 +90,7 @@ function pushCommand(data) {
     body: JSON.stringify(data)
   }).then(res => {
     setLoading(false)
-    if(res.status !== 200) {
+    if (res.status !== 200) {
       addSysLine('Ocurrió un error :c')
     } else {
       res.json().then(data => {
@@ -99,7 +99,7 @@ function pushCommand(data) {
           localStorage.setItem('profile', JSON.stringify(profile));
         }
       
-        if (data.hasOwnProperty('clear') && data.clear) {
+        if (data.clear) {
           clearLines()
         }
       
@@ -116,6 +116,11 @@ function pushCommand(data) {
             addLine(msg.carret, msg.content, msg.class)
           })
         }
+
+        if (data.reload) {
+          window.location.reload();
+        }
+
         setLoading(false);
         setMainCarret('\xa0\xa0\xa0>')
         inputEl.focus()
@@ -156,8 +161,8 @@ inputEl.addEventListener('keypress', (e) => {
 inputEl.addEventListener('input', (e) => {
   e.target.style.height = '1rem';
   e.target.style.height = ((e.target.scrollHeight) / 16) + 'rem';
-  if(!loading && !loginState){
-    if(e.target.value[0] == '/') {
+  if (!loading){
+    if (e.target.value[0] == '/') {
       setMainCarret('opt>')
     } else {
       setMainCarret('\xa0\xa0\xa0>')
@@ -182,7 +187,7 @@ function authorize() {
           addSysLine(`uid: ${json.uid}`, true)
         }
       })
-      //pushCommand()
+      pushCommand()
     }
   });
   inputEl.focus()

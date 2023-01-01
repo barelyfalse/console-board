@@ -1,29 +1,12 @@
 require('dotenv').config()
-const { initializeApp } = require('firebase/app')
-const { getFirestore, collection, getDocs, addDoc, query, orderBy, limit, serverTimestamp } = require('firebase/firestore')
 const express = require('express')
 const cookieParser = require('cookie-parser')
 const favicon = require('serve-favicon')
-const uuid = require('uuid').v4
-const crypto = require('crypto');
 
 const commandChannel = require('./api/command-channel');
 const userAuth = require('./api/client-auth');
 
 var app = express()
-
-const firebaseConfig = {
-  apiKey: process.env.FIREBASE_API_KEY,
-  authDomain: process.env.FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.FIREBASE_PROJECT_ID,
-  storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.FIREBASE_APP_ID,
-  measurementId: process.env.FIREBASE_MEASUREMENT_ID
-};
-
-const fbApp = initializeApp(firebaseConfig);
-const db = getFirestore(fbApp);
 
 app.use(express.static(__dirname+'/public'))
 app.use(favicon(__dirname + '/public/img/favicon.ico'))

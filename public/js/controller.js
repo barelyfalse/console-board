@@ -1,15 +1,12 @@
-const input = document.getElementById('input');
-const lines = document.getElementById('lines');
-const linesContainer = document.getElementById('lines-container');
+const inputEl = document.getElementById('input');
+const linesWrappEl = document.getElementById('lines-wrapper');
+const linesContEl = document.getElementById('lines-container');
 const optsEl = document.getElementById('opts');
 const footEl = document.getElementById('foot');
 let profile = {}
 let options = []
-let loginState = false;
-let logged = false;
-let loadI = 0;
+let loadIndx = 0;
 let loading = false;
-let onBoard = false;
 const loadChars = ['/', '-', '\\', '|']
 
 function addLine(carret, content, style = '') {
@@ -23,16 +20,8 @@ function addLine(carret, content, style = '') {
   cont.innerText = content
   ln.appendChild(car)
   ln.appendChild(cont)
-  lines.appendChild(ln)
+  linesContEl.appendChild(ln)
   settleLines()
-}
-
-function clearLines() {
-  var child = lines.lastElementChild; 
-  while (child) {
-    lines.removeChild(child);
-      child = lines.lastElementChild;
-  }
 }
 
 function addSysLine(msg, dim = false) {
@@ -43,8 +32,18 @@ function addLocalLine(msg) {
   addLine('\xa0\xa0\xa0>\xa0', msg)
 }
 
-function setMainCarret(carret) {
-  document.getElementById('input-carret').innerText = `${carret}\xa0`
+function clearLines() {
+  var child = linesContEl.lastElementChild; 
+  while (child) {
+    linesContEl.removeChild(child);
+      child = linesContEl.lastElementChild;
+  }
+}
+
+function settleLines() {
+  setTimeout(() => {
+    linesWrappEl.scrollTop = linesWrappEl.scrollHeight;
+  }, 200)
 }
 
 function setOptions(opts) {
@@ -56,8 +55,31 @@ function setOptions(opts) {
   optsEl.innerHTML = optText
 }
 
+function setMainCarret(carret) {
+  document.getElementById('input-carret').innerText = `${carret}\xa0`
+}
+
 function setFoot(ftext) {
   footEl.innerText = ftext
+}
+
+function setLoading(ldng) {
+  if(ldng) {
+    loading = true
+    inputEl.disabled = true
+    rec = setTimeout(() => {
+      setMainCarret(`\xa0${loadChars[loadIndx%loadChars.length]}\xa0✕`)
+      loadIndx++
+      setLoading(true)
+    }, 200)
+  } else {
+    if(loading) {
+      loading = false
+      loadIndx = 0
+      inputEl.disabled = false
+      clearTimeout(rec)
+    }
+  }
 }
 
 function pushCommand(data) {
@@ -96,13 +118,13 @@ function pushCommand(data) {
         }
         setLoading(false);
         setMainCarret('\xa0\xa0\xa0>')
-        input.focus()
+        inputEl.focus()
       })
     }
   });
 }
 
-input.addEventListener('keypress', (e) => {
+inputEl.addEventListener('keypress', (e) => {
   const keyPressed = e.key
   
   if (keyPressed === 'Enter') {
@@ -131,7 +153,7 @@ input.addEventListener('keypress', (e) => {
   }
 })
 
-input.addEventListener('input', (e) => {
+inputEl.addEventListener('input', (e) => {
   e.target.style.height = '1rem';
   e.target.style.height = ((e.target.scrollHeight) / 16) + 'rem';
   if(!loading && !loginState){
@@ -142,31 +164,6 @@ input.addEventListener('input', (e) => {
     }
   }
 })
-
-function settleLines() {
-  setTimeout(() => {
-    linesContainer.scrollTop = linesContainer.scrollHeight;
-  }, 200)
-}
-
-function setLoading(ldng) {
-  if(ldng) {
-    loading = true
-    input.disabled = true
-    rec = setTimeout(() => {
-      setMainCarret(`\xa0${loadChars[loadI%loadChars.length]}\xa0✕`)
-      loadI++
-      setLoading(true)
-    }, 200)
-  } else {
-    if(loading) {
-      loading = false
-      loadI = 0
-      input.disabled = false
-      clearTimeout(rec)
-    }
-  }
-}
 
 function authorize() {
   setLoading(true)
@@ -185,10 +182,10 @@ function authorize() {
           addSysLine(`uid: ${json.uid}`, true)
         }
       })
-      pushCommand()
+      //pushCommand()
     }
   });
-  input.focus()
+  inputEl.focus()
 }
 
 authorize()

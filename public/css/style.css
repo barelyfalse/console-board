@@ -27,7 +27,7 @@ body {
   max-height: 100%;
 }
 
-.lines-container {
+.lines-wrapper {
   flex-grow: 1;
   overflow-y: auto;
   scrollbar-color: rgb(43, 43, 43) transparent;
@@ -47,7 +47,7 @@ body {
   background: rgb(80, 80, 80); 
 } 
 
-.lines {
+.lines-container {
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
@@ -78,6 +78,10 @@ body {
   color: rgb(167, 39, 39);
 }
 
+.dim-blue {
+  color: rgb(69, 78, 146);
+}
+
 .info {
   color: rgb(32, 32, 32);
   background-color: rgb(151, 151, 151);
@@ -85,9 +89,13 @@ body {
 }
 
 .opt-letter {
-  background-color: rgb(32, 32, 32);
+  background-color: rgb(48, 48, 48);
   color: rgb(151, 151, 151);
   font-weight: bold;
+  padding-right: 2px;
+  padding-left: 2px;
+  margin-right: -2px;
+  margin-left: -2px;
 }
 
 .foot {
